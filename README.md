@@ -24,6 +24,12 @@ It runs two ways from the exact same code:
 - **As a desktop app** — a tiny [Tauri](https://tauri.app) shell (`src-tauri/`)
   hosts the same frontend in a native window.
 
+## Privacy
+
+Emblem Studio processes images, GIFs, videos, and webcam frames locally in your
+browser or desktop app. The static web app has no backend and does not upload
+your media.
+
 ## Features
 
 - **Match modes:** silhouette or portrait, with adjustable busyness, threshold,
@@ -54,6 +60,36 @@ cd web && python3 -m http.server 8080   # then visit http://localhost:8080
 > The webcam motion source needs a secure context (https:// or localhost) and
 > a browser; image / GIF / video upload work anywhere, including `file://`.
 
+### Browser support
+
+Recommended: current Chrome, Edge, Firefox, or Safari on desktop. GIF, PNG, SVG,
+ANSI, and bundle exports are the most portable. WebM export depends on
+`canvas.captureStream`, `MediaRecorder`, and `video/webm` support. Clipboard
+copy and webcam capture may be blocked by browsers on `file://`; the copy
+buttons fall back to selectable text when direct clipboard access is unavailable.
+
+### Download verification
+
+Static release zips include a `SHA256SUMS` manifest. After downloading a GitHub
+release asset:
+
+```sh
+sha256sum -c SHA256SUMS
+```
+
+For this source tree, the current static zip hash is also tracked at
+[`release/SHA256SUMS`](release/SHA256SUMS).
+
+### Input limits
+
+The public build rejects very large inputs to avoid freezing the tab:
+
+- Still images: 20 MB file cap, decoded dimensions up to 24 MP.
+- GIF/video/webcam motion frames: 640×480 per captured frame.
+- GIF source frames: 90 before resampling to the 36-frame loop.
+
+Resize very large artwork before loading it.
+
 ### Desktop app (Tauri)
 Prerequisites: a [Rust toolchain](https://rustup.rs) and the
 [Tauri v2 system dependencies](https://v2.tauri.app/start/prerequisites/) for
@@ -77,6 +113,16 @@ node -e "const E=require('./engine.js');const r=E.selftest();console.log(r.passe
 node gif-encoder.test.js
 node motion-input.test.js
 ```
+
+Or run the full release check:
+
+```sh
+./test-all.sh
+node release/package.js
+```
+
+`node release/package.js` writes `dist/emblem-studio/emblem-studio-v1.1.0.zip`,
+`dist/emblem-studio/SHA256SUMS`, and refreshes `release/SHA256SUMS`.
 
 ## Project layout
 ```

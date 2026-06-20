@@ -57,9 +57,15 @@
   function recordWebm(canvas, draw, totalMs, fps) {
     return new Promise((resolve, reject) => {
       try {
+        if (!canvas.captureStream) throw new Error("canvas captureStream is not supported");
+        if (!window.MediaRecorder) throw new Error("MediaRecorder is not supported");
+        const mimeType = MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
+          ? "video/webm;codecs=vp9"
+          : (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported("video/webm") ? "video/webm" : "");
+        if (!mimeType) throw new Error("video/webm recording is not supported");
         const stream = canvas.captureStream(fps || 25);
         const chunks = [];
-        const rec = new MediaRecorder(stream, { mimeType: "video/webm" });
+        const rec = new MediaRecorder(stream, { mimeType });
         rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
         rec.onstop = () => resolve(new Blob(chunks, { type: "video/webm" }));
         rec.onerror = reject;

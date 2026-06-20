@@ -1,0 +1,22 @@
+{
+  "name": "emblem-studio",
+  "version": "1.1.0",
+  "files": [
+    "README.md",
+    "SECURITY.md",
+    "LICENSE",
+    "NOTICE",
+    "web/index.html",
+    "web/engine.js",
+    "web/gif-encoder.js",
+    "web/motion-input.js",
+    "web/raster.js",
+    "web/assets/rm3-palette.css",
+    "web/assets/fonts/OFL.txt",
+    "web/assets/fonts/ShareTechMono-Regular.ttf",
+    "web/assets/logo/rm3-hex.svg",
+    "web/assets/logo/rm3-hex-on-dark.svg",
+    "web/assets/logo/rm3-hex.ico",
+    "web/vendor/omggif.js"
+  ]
+}

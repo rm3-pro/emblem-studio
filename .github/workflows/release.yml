@@ -53,3 +53,17 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Package static web app
+        if: matrix.platform == 'ubuntu-22.04'
+        run: node release/package.js
+
+      - name: Attach static web app to release
+        if: matrix.platform == 'ubuntu-22.04'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ github.ref_name }}" \
+            dist/emblem-studio/emblem-studio-v*.zip \
+            dist/emblem-studio/SHA256SUMS \
+            --clobber
