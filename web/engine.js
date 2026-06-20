@@ -104,14 +104,71 @@
       theme: "flat",
     };
   }
-  function withDefaults(params) {
-    const p = Object.assign(defaults(), params);
-    p.fx = Object.assign({ rotate3d: false, churn: true, shimmer: false, dissolve: false }, (params && params.fx) || {});
-    delete p.fx.spin; // drop legacy key from old configs
-    if (!(params && Object.prototype.hasOwnProperty.call(params, "edgeStyle"))) {
-      p.edgeStyle = p.edgeAmount > 0 ? "glow" : "off";
+  function finiteNumber(v, fallback, lo, hi) {
+    const n = typeof v === "number" ? v : (typeof v === "string" ? parseFloat(v) : NaN);
+    if (!Number.isFinite(n)) return fallback;
+    return clamp(n, lo, hi);
+  }
+  function bool(v, fallback) {
+    return typeof v === "boolean" ? v : fallback;
+  }
+  function oneOf(v, allowed, fallback) {
+    return allowed.indexOf(v) >= 0 ? v : fallback;
+  }
+  function cleanString(v, fallback, maxLen) {
+    if (typeof v !== "string") return fallback;
+    return v.slice(0, maxLen);
+  }
+  function cleanRgb(v, fallback) {
+    if (!Array.isArray(v) || v.length !== 3) return fallback.slice();
+    const out = [];
+    for (let i = 0; i < 3; i++) {
+      const n = typeof v[i] === "number" ? v[i] : (typeof v[i] === "string" ? parseFloat(v[i]) : NaN);
+      if (!Number.isFinite(n)) return fallback.slice();
+      out.push(cbyte(n));
     }
+    return out;
+  }
+  function sanitizeParams(params) {
+    const d = defaults();
+    const src = params && typeof params === "object" && !Array.isArray(params) ? params : {};
+    const p = defaults();
+    p.cols = Math.round(finiteNumber(src.cols, d.cols, 8, 120));
+    p.matchMode = oneOf(src.matchMode, MATCH_MODES, d.matchMode);
+    p.symbolKey = Object.prototype.hasOwnProperty.call(SYMBOL_SETS, src.symbolKey) ? src.symbolKey : d.symbolKey;
+    p.customSymbols = cleanString(src.customSymbols, d.customSymbols, 120);
+    p.busyness = finiteNumber(src.busyness, d.busyness, 0, 1);
+    p.threshold = finiteNumber(src.threshold, d.threshold, 0, 1);
+    p.edgeAmount = finiteNumber(src.edgeAmount, d.edgeAmount, 0, 1);
+    if (Object.prototype.hasOwnProperty.call(src, "edgeStyle")) p.edgeStyle = oneOf(src.edgeStyle, ["off", "glow", "lines"], d.edgeStyle);
+    else p.edgeStyle = p.edgeAmount > 0 ? "glow" : "off";
+    p.edgeThreshold = finiteNumber(src.edgeThreshold, d.edgeThreshold, 0, 1);
+    p.edgeDetail = finiteNumber(src.edgeDetail, d.edgeDetail, 0, 1);
+    p.brightness = finiteNumber(src.brightness, d.brightness, -0.5, 0.5);
+    p.contrast = finiteNumber(src.contrast, d.contrast, 0.2, 2.5);
+    p.invert = bool(src.invert, d.invert);
+    p.speed = finiteNumber(src.speed, d.speed, 0.25, 4);
+    p.fx = {};
+    const fx = src.fx && typeof src.fx === "object" && !Array.isArray(src.fx) ? src.fx : {};
+    for (const k of FX_KEYS) p.fx[k] = bool(fx[k], d.fx[k]);
+    p.rotAxis = oneOf(src.rotAxis, ROT_AXES, d.rotAxis);
+    p.rotTurns = Math.round(finiteNumber(src.rotTurns, d.rotTurns, 1, 3));
+    p.perspective = finiteNumber(src.perspective, d.perspective, 0, 1);
+    p.farDim = finiteNumber(src.farDim, d.farDim, 0, 1);
+    p.colorMode = oneOf(src.colorMode, COLOR_MODES, d.colorMode);
+    p.baseColor = cleanRgb(src.baseColor, d.baseColor);
+    p.accentColor = cleanRgb(src.accentColor, d.accentColor);
+    p.accentThreshold = finiteNumber(src.accentThreshold, d.accentThreshold, 0, 1);
+    p.imageLift = finiteNumber(src.imageLift, d.imageLift, 0, 1);
+    p.label = cleanString(src.label, d.label, 80) || " ";
+    p.renderMode = oneOf(src.renderMode, ["glyph", "braille"], d.renderMode);
+    p.dither = bool(src.dither, d.dither);
+    p.dotChurn = bool(src.dotChurn, d.dotChurn);
+    p.theme = Object.prototype.hasOwnProperty.call(THEMES, src.theme) ? src.theme : d.theme;
     return p;
+  }
+  function withDefaults(params) {
+    return sanitizeParams(params);
   }
 
   function gridDims(cols, imgW, imgH) {
@@ -749,7 +806,7 @@ ${playerScript(art, labelJs, "")}
     return _b64e(JSON.stringify(out));
   }
   function decodeShare(s) {
-    try { const o = JSON.parse(_b64d(String(s))); return (o && typeof o === "object" && !Array.isArray(o)) ? o : null; }
+    try { const o = JSON.parse(_b64d(String(s))); return (o && typeof o === "object" && !Array.isArray(o)) ? sanitizeParams(o) : null; }
     catch (e) { return null; }
   }
 
@@ -1209,6 +1266,22 @@ ${playerScript(art, labelJs, "")}
       ok("share round-trip nested", back.edgeStyle === "lines" && back.theme === "amber" && back.fx.rotate3d === true);
       ok("share round-trip label", back.label === "RM3");
       ok("decode garbage null", decodeShare("!!!not base64!!!") === null);
+      const hostile = decodeShare(_b64e(JSON.stringify({
+        cols: 999999,
+        colorMode: "flat",
+        baseColor: ["0);background:url(https://bad.example)", -5, 999],
+        accentColor: ["red", {}, []],
+        label: "X".repeat(1000),
+        customSymbols: "Y".repeat(1000),
+        theme: "javascript:alert(1)",
+        fx: { rotate3d: "yes", churn: false, unknown: true },
+        unknownKey: "drop me"
+      })));
+      ok("share sanitizes RGB numbers", hostile.baseColor.join(",") === "0,0,255" && hostile.accentColor.join(",") === ACCENT.join(","));
+      ok("share clamps cols", hostile.cols === 120);
+      ok("share drops unknown keys", !Object.prototype.hasOwnProperty.call(hostile, "unknownKey"));
+      ok("share caps strings", hostile.label.length === 80 && hostile.customSymbols.length === 120);
+      ok("share sanitizes enums and booleans", hostile.theme === "flat" && hostile.fx.rotate3d === false && hostile.fx.churn === false);
       // 3D scalar params round-trip
       const p3d = { fx: { rotate3d: true }, rotAxis: "x", rotTurns: 2, perspective: 0.3, farDim: 0.5 };
       const s3d = encodeShare(p3d);
@@ -1251,7 +1324,7 @@ ${playerScript(art, labelJs, "")}
 
   const API = {
     CELL_ASPECT, FRAMES, FRAME_TICK_MS, OFFWHITE, ACCENT, SYMBOL_SETS, ROT_AXES, COLOR_MODES, MATCH_MODES, FX_KEYS, THEMES, PRESETS,
-    gridDims, sample, sampleBraille, sobel, gaussianBlur, dog, gradientAngle, edgeGlyph, shapeLevel, defaults, withDefaults, rampFor, liftColor,
+    gridDims, sample, sampleBraille, sobel, gaussianBlur, dog, gradientAngle, edgeGlyph, shapeLevel, defaults, sanitizeParams, withDefaults, rampFor, liftColor,
     BRAILLE_BITS, brailleChar, floydSteinberg,
     renderGrid, renderBrailleGrid, frameToText, matchFrame, bakeFrames, bakeColorFrames, bakeColorFrameAt, bakeColorFramesFromImages, bakeFramesFromImages, shimmerCells,
     paletteFrameToAnsi, bakeAnsiFrames,

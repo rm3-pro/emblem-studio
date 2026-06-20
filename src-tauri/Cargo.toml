@@ -1,6 +1,6 @@
 [package]
 name = "emblem-studio"
-version = "1.0.0"
+version = "1.1.0"
 description = "Image to animated ASCII emblem authoring"
 authors = ["RM3 <a1v@rm3.pro>"]
 edition = "2021"

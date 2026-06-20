@@ -11,3 +11,6 @@ Thumbs.db
 
 # Node (only the test runner uses node; no deps are installed)
 node_modules/
+
+# release artifacts
+/dist/

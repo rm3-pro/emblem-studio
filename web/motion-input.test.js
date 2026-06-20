@@ -1,4 +1,4 @@
-const { gifToImageDatas } = require("./motion-input.js");
+const { LIMITS, gifToImageDatas } = require("./motion-input.js");
 const { encodeGif } = require("./gif-encoder.js");
 function run() {
   const res = []; const ok = (n, c) => res.push({ name: n, pass: !!c });
@@ -12,6 +12,15 @@ function run() {
   // frame 0 is black, a later resampled frame maps onto the red frame
   ok("frame0 black", out[0].data[0] === 0 && out[0].data[1] === 0);
   ok("some frame red", out.some((d) => d.data[0] === 255 && d.data[1] === 0));
+  ok("default max pixels is public-release bounded", LIMITS.maxPixels <= 1280 * 720);
+  try {
+    gifToImageDatas(gif, { count: 36, maxPixels: W * H - 1 });
+    ok("oversized GIF rejected", false);
+  } catch (e) {
+    ok("oversized GIF rejected", /too large/i.test(e.message));
+  }
+  const twelve = gifToImageDatas(gif, { count: 12 });
+  ok("options count resamples", twelve.length === 12);
   const passed = res.filter((r) => r.pass).length;
   return { passed, total: res.length, results: res, allPass: passed === res.length };
 }
