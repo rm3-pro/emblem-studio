@@ -50,7 +50,7 @@ jobs:
           projectPath: .
           tagName: ${{ github.ref_name }}
           releaseName: "Emblem Studio ${{ github.ref_name }}"
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
 

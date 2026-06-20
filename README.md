@@ -121,7 +121,7 @@ Or run the full release check:
 node release/package.js
 ```
 
-`node release/package.js` writes `dist/emblem-studio/emblem-studio-v1.1.0.zip`,
+`node release/package.js` writes `dist/emblem-studio/emblem-studio-v1.1.1.zip`,
 `dist/emblem-studio/SHA256SUMS`, and refreshes `release/SHA256SUMS`.
 
 ## Project layout
