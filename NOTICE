@@ -1,0 +1,30 @@
+Emblem Studio
+Copyright (c) 2026 RM3 (rm3.pro)
+
+This product is licensed under the Apache License, Version 2.0 (the "License");
+see the LICENSE file. You may not use the code except in compliance with the
+License.
+
+------------------------------------------------------------------------------
+Trademarks and brand assets (NOT covered by the Apache-2.0 license)
+------------------------------------------------------------------------------
+The "RM3" name and wordmark, and the RM3 hexagon emblem
+(web/assets/logo/rm3-hex*.svg, .ico, and the icon sets derived from it), are
+(c) RM3 — all rights reserved. Per Apache-2.0 section 6, no trademark rights
+are granted. You may use, fork, and redistribute the source code under the
+Apache-2.0 license, but you may NOT use the RM3 name or emblem in a way that
+implies endorsement, and you should replace the RM3 branding in derivative
+distributions.
+
+------------------------------------------------------------------------------
+Bundled third-party components
+------------------------------------------------------------------------------
+* Share Tech Mono (web/assets/fonts/ShareTechMono-Regular.ttf)
+  Copyright (c) 2012, Carrois Type Design, Ralph du Carrois.
+  Licensed under the SIL Open Font License, Version 1.1.
+  Full text: web/assets/fonts/OFL.txt
+
+* omggif (web/vendor/omggif.js)
+  Copyright (c) Dean McNamee <dean@gmail.com>, 2013.
+  Licensed under the MIT License (header retained in the file).
+  https://github.com/deanm/omggif

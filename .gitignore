@@ -1,0 +1,13 @@
+# Rust / Tauri build output
+/src-tauri/target/
+/src-tauri/gen/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+
+# Node (only the test runner uses node; no deps are installed)
+node_modules/

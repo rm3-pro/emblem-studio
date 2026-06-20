@@ -1,0 +1,37 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Emblem Studio",
+  "version": "1.0.0",
+  "identifier": "pro.rm3.emblem-studio",
+  "build": {
+    "frontendDist": "../web"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Emblem Studio",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 900,
+        "minHeight": 600
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "GraphicsAndDesign",
+    "shortDescription": "Image to animated ASCII emblem authoring",
+    "longDescription": "Turn any image into an animated, colored ASCII emblem: silhouette/portrait matching, directional edges, braille, true 3D card rotation, retro themes, and export to a self-contained player.html, GIF, WebM, SVG, ANSI, or share link."
+  }
+}

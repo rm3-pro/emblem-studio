@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Emblem Studio · RM3</title>
+<link rel="icon" href="assets/logo/rm3-hex.ico">
+<link rel="stylesheet" href="assets/rm3-palette.css">
+<style>
+@font-face{font-family:'Share Tech Mono';src:url('assets/fonts/ShareTechMono-Regular.ttf') format('truetype');font-display:swap}
+:root{--bg:#0b0a08;--panel:#0f0e0b;--line:#3d3620;--ink:#c4b896;--dim:#6b5f42;--accent:#c64038}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:'Share Tech Mono','DejaVu Sans Mono',Consolas,monospace}
+#app{display:grid;grid-template-columns:1fr 330px;height:100%}
+#stageWrap{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+#drop{position:absolute;inset:18px;border:1px dashed var(--line);border-radius:0;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:13px;pointer-events:none;opacity:0;transition:opacity .15s}
+#drop.show{opacity:1}
+#stage{text-align:center}
+pre#art{margin:0;line-height:1.0;font-size:14px;white-space:pre;color:var(--ink)}
+#label{margin-top:1.4em;font-size:16px;letter-spacing:3px;min-height:1.2em}
+#empty{color:var(--dim);font-size:13px;text-align:center;line-height:1.8}#empty b{color:var(--ink)}
+#panel{background:var(--panel);border-left:1px solid var(--line);padding:14px;overflow-y:auto}
+h1{font-size:13px;letter-spacing:2px;margin:0 0 2px}
+.sub{font-size:11px;color:var(--dim);margin:0 0 14px}
+.row{margin:0 0 11px}
+label.cap{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:1px}
+label.cap b{color:var(--ink);font-weight:normal}
+input[type=range]{width:100%;accent-color:var(--accent)}
+select,input[type=text]{width:100%;background:var(--rm3-bg-panel-alt);color:var(--ink);border:1px solid var(--line);padding:6px;font-family:inherit;font-size:12px;border-radius:0}
+input[type=color]{width:100%;height:28px;background:var(--rm3-bg-panel-alt);border:1px solid var(--line);border-radius:0;cursor:pointer}
+.seg{display:flex;gap:4px}
+.seg button{flex:1;background:var(--rm3-bg-panel-alt);color:var(--dim);border:1px solid var(--line);padding:6px 4px;font-family:inherit;font-size:11px;cursor:pointer;border-radius:0}
+.seg button.on{color:var(--ink);border-color:var(--accent);background:var(--rm3-bg-active)}
+.fx{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.fx label{display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;background:var(--rm3-bg-panel-alt);border:1px solid var(--line);padding:6px;border-radius:0}
+.fx label.on{border-color:var(--accent);background:var(--rm3-bg-active)}
+.toggle{display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+hr{border:none;border-top:1px solid var(--line);margin:14px 0}
+.sec{font-size:10px;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin:0 0 8px}
+.exports button{width:100%;margin-bottom:8px;background:var(--rm3-bg-panel-alt);color:var(--ink);border:1px solid var(--line);padding:9px;font-family:inherit;font-size:12px;cursor:pointer;border-radius:0}
+.exports button:hover{border-color:var(--accent)}.exports button.primary{background:var(--rm3-bg-active);border-color:var(--accent)}
+.exports button:disabled{opacity:.4;cursor:not-allowed}
+#fileBtn{display:block;width:100%;text-align:center;background:var(--rm3-bg-active);border:1px solid var(--accent);color:var(--ink);padding:10px;border-radius:0;cursor:pointer;font-size:12px;margin-bottom:6px}
+#fname{font-size:11px;color:var(--dim);text-align:center;margin-bottom:8px;word-break:break-all}
+.note{font-size:10px;color:var(--dim);margin-top:2px}
+#allBtn{width:100%;margin-top:6px;background:var(--rm3-bg-panel-alt);color:var(--ink);border:1px solid var(--line);padding:6px;border-radius:0;cursor:pointer;font-size:11px}
+#allBtn:hover{border-color:var(--accent)}
+.hide{display:none}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--rm3-bg-active);border:1px solid var(--accent);color:var(--ink);padding:8px 14px;border-radius:0;font-size:12px;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:1}
+#gallery{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+#gallery button{background:var(--rm3-bg-panel-alt);color:var(--dim);border:1px solid var(--line);padding:5px 8px;font-family:inherit;font-size:11px;cursor:pointer;border-radius:0}
+#gallery button:hover{border-color:var(--accent);color:var(--ink)}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="stageWrap">
+    <div id="drop">drop an image to start</div>
+    <div id="stage">
+      <div id="empty"><b>EMBLEM STUDIO</b><br>drag an image here, or use <b>Load image</b> →<br>match · color · rotate · stack effects · export</div>
+      <pre id="art" hidden></pre>
+      <div id="label" hidden></div>
+    </div>
+  </div>
+
+  <div id="panel">
+    <div style="display:flex;align-items:center;gap:10px"><img src="assets/logo/rm3-hex-on-dark.svg" alt="RM3" style="height:26px;width:auto"><h1 style="margin:0">EMBLEM STUDIO</h1></div>
+    <p class="sub">animated ASCII emblems · RM3</p>
+
+    <input type="file" id="file" accept="image/*" hidden>
+    <button id="fileBtn">⤓ Load image</button>
+    <div id="fname"></div>
+
+    <hr>
+    <p class="sec">Motion source</p>
+    <div class="row">
+      <input type="file" id="gifFile" accept="image/gif" hidden>
+      <button id="gifBtn" style="width:100%;background:var(--rm3-bg-panel-alt);color:var(--ink);border:1px solid var(--line);padding:8px;font-family:inherit;font-size:12px;cursor:pointer;border-radius:0;margin-bottom:6px">⤓ Load animated GIF</button>
+      <input type="file" id="vidFile" accept="video/*" hidden>
+      <button id="vidBtn" style="width:100%;background:var(--rm3-bg-panel-alt);color:var(--ink);border:1px solid var(--line);padding:8px;font-family:inherit;font-size:12px;cursor:pointer;border-radius:0;margin-bottom:6px">⤓ Load video</button>
+      <button id="camBtn" style="width:100%;background:var(--rm3-bg-panel-alt);color:var(--ink);border:1px solid var(--line);padding:8px;font-family:inherit;font-size:12px;cursor:pointer;border-radius:0;margin-bottom:6px">◉ Use webcam</button>
+      <button id="stillBtn" class="hide" style="width:100%;background:var(--rm3-bg-active);color:var(--accent);border:1px solid var(--accent);padding:8px;font-family:inherit;font-size:12px;cursor:pointer;border-radius:0">✕ Back to still image</button>
+      <p class="note" id="motionNote"></p>
+    </div>
+    <hr>
+
+    <div class="row">
+      <label class="cap">Render mode</label>
+      <div class="seg" id="modeSeg">
+        <button data-v="glyph" class="on">Glyph</button>
+        <button data-v="braille">Braille</button>
+      </div>
+    </div>
+    <div class="row hide" id="brailleBox">
+      <div class="two">
+        <label class="toggle"><input type="checkbox" id="dither" checked> Dither</label>
+        <label class="toggle"><input type="checkbox" id="dotChurn"> Dot churn</label>
+      </div>
+    </div>
+
+    <div class="row">
+      <label class="cap">Match mode</label>
+      <div class="seg" id="matchSeg">
+        <button data-v="silhouette" class="on">Silhouette</button>
+        <button data-v="portrait">Portrait</button>
+      </div>
+    </div>
+
+    <div class="row"><label class="cap">Symbol set</label>
+      <select id="symbol">
+        <option value="line">Line glyphs  - | / \ #</option>
+        <option value="blocks">Blocks  ░ ▒ ▓ █</option>
+        <option value="dots">Dots  · ○ ● ◉</option>
+        <option value="shapes">Shapes  ◆ ◇ ■ ▲</option>
+        <option value="hash">Hash  . : #</option>
+        <option value="ascii">ASCII ramp  .:=+*#@</option>
+        <option value="bold">Bold  ▪ ▦ ▩ █</option>
+        <option value="soft">Soft  · : + o O</option>
+        <option value="mixed">Mixed  . , ; o x % # @</option>
+        <option value="asciiExt">ASCII extended (full ramp)</option>
+      </select>
+      <input type="text" id="custom" placeholder="custom glyphs (sparse→dense)" style="margin-top:6px">
+    </div>
+
+    <div class="row"><label class="cap">Size (cols) <b id="colsV">48</b></label><input type="range" id="cols" min="16" max="120" value="48"></div>
+    <div class="row"><label class="cap">Busyness <b id="busyV">0.50</b></label><input type="range" id="busy" min="0" max="1" step="0.01" value="0.5"></div>
+    <div class="row"><label class="cap">Threshold <b id="thrV">0.45</b></label><input type="range" id="thr" min="0" max="1" step="0.01" value="0.45"></div>
+    <div class="row"><label class="cap">Edge blend <b id="edgeV">0.00</b></label><input type="range" id="edge" min="0" max="1" step="0.01" value="0"></div>
+    <div class="row" id="edgeStyleRow">
+      <label class="cap">Edge style</label>
+      <div class="seg" id="edgeSeg">
+        <button data-v="off" class="on">Off</button>
+        <button data-v="glow">Glow</button>
+        <button data-v="lines">Lines</button>
+      </div>
+      <p class="note hide" id="edgeBrailleNote">not available in Braille mode</p>
+    </div>
+    <div class="row hide" id="edgeLinesBox">
+      <label class="cap">Edge threshold <b id="edgeThrV">0.35</b></label><input type="range" id="edgeThr" min="0" max="1" step="0.01" value="0.35">
+      <label class="cap" style="margin-top:6px">Edge detail <b id="edgeDetV">0.50</b></label><input type="range" id="edgeDet" min="0" max="1" step="0.01" value="0.5">
+    </div>
+
+    <hr><p class="sec">Color</p>
+    <div class="row"><label class="cap">Color mode</label>
+      <div class="seg" id="colorSeg">
+        <button data-v="flat" class="on">Flat</button>
+        <button data-v="palette">Palette</button>
+        <button data-v="image">Image</button>
+      </div>
+    </div>
+    <div class="row two" id="colorPick">
+      <div><label class="cap">Base</label><input type="color" id="baseColor" value="#d8d2bc"></div>
+      <div id="accWrap"><label class="cap">Accent</label><input type="color" id="accentColor" value="#c64038"></div>
+    </div>
+    <div class="row hide" id="accThrRow"><label class="cap">Accent above <b id="accThrV">0.72</b></label><input type="range" id="accThr" min="0" max="1" step="0.01" value="0.72"></div>
+    <div class="row hide" id="liftRow"><label class="cap">Image lift <b id="liftV">0.30</b></label><input type="range" id="lift" min="0" max="1" step="0.01" value="0.3"></div>
+
+    <hr><p class="sec">Theme</p>
+    <div class="row">
+      <label class="cap">Display theme</label>
+      <select id="theme"></select>
+    </div>
+
+    <hr><p class="sec">Presets</p>
+    <div id="gallery"></div>
+
+    <hr><p class="sec">Effects (stackable)</p>
+    <div class="fx" id="fx">
+      <label data-k="rotate3d" id="spinLabel"><input type="checkbox" id="fxrotate3d"> 3D Spin</label>
+      <label data-k="churn" class="on"><input type="checkbox" id="fxchurn" checked> Churn</label>
+      <label data-k="shimmer"><input type="checkbox" id="fxshimmer"> Shimmer</label>
+      <label data-k="dissolve"><input type="checkbox" id="fxdissolve"> Dissolve</label>
+    </div>
+    <button id="allBtn">✦ All effects on / off</button>
+
+    <div id="spinBox" class="hide" style="margin-top:11px">
+      <div class="row"><label class="cap">Rotate axis</label>
+        <div id="axisSeg" class="seg"><button data-v="y" class="on">Y · horizontal</button><button data-v="x">X · tumble</button><button data-v="z">Z · in-plane</button></div>
+      </div>
+      <div class="row"><label class="cap">Turns / loop <b id="turnsV">1</b></label><input type="range" id="turns" min="1" max="3" step="1" value="1"></div>
+      <div class="row"><label class="cap">Perspective <b id="perspV">0.50</b></label><input type="range" id="persp" min="0" max="1" step="0.05" value="0.5"></div>
+      <div class="row"><label class="cap">Far-side dim <b id="farV">0.00</b></label><input type="range" id="far" min="0" max="1" step="0.05" value="0"></div>
+    </div>
+
+    <hr><p class="sec">Adjust</p>
+    <div class="row"><label class="cap">Animation speed <b id="spdV">1.0</b></label><input type="range" id="spd" min="0.25" max="4" step="0.25" value="1"></div>
+    <div class="row"><label class="cap">Brightness <b id="briV">0.00</b></label><input type="range" id="bri" min="-0.5" max="0.5" step="0.01" value="0"></div>
+    <div class="row"><label class="cap">Contrast <b id="conV">1.00</b></label><input type="range" id="con" min="0.2" max="2.5" step="0.05" value="1"></div>
+    <div class="row"><label class="toggle"><input type="checkbox" id="inv"> Invert</label></div>
+    <div class="row"><label class="cap">Label text</label><input type="text" id="labelTxt" value="RM3"></div>
+
+    <hr>
+    <div class="exports">
+      <button id="expZip" class="primary" disabled>⬇ Export bundle (.zip)</button>
+      <button id="expCopy" disabled>⧉ Copy current frame</button>
+      <button id="copyAnsi" disabled>⧉ Copy for terminal (ANSI)</button>
+      <button id="expPng" disabled>🖼 PNG snapshot</button>
+      <button id="dlSvg" disabled>⬇ Download SVG</button>
+      <button id="copyEmbed" disabled>⧉ Copy embed snippet</button>
+      <button id="shareBtn">⧉ Copy share link</button>
+      <button id="dlGif" disabled>⬇ Export GIF</button>
+      <button id="dlWebm" disabled>⬇ Export WebM</button>
+    </div>
+    <p class="note">bundle = player.html (colored) + 36 frame_*.txt + config.json</p>
+    <div style="margin-top:18px;padding-top:10px;border-top:1px solid var(--line);font-size:10px;color:var(--dim);display:flex;align-items:center;gap:6px"><img src="assets/logo/rm3-hex.svg" alt="" style="height:14px;width:auto;opacity:.8"><span>RM3 · <a href="https://rm3.pro" style="color:var(--dim)">rm3.pro</a> — part of the RM3 framework</span></div>
+  </div>
+</div>
+<div id="toast"></div>
+<canvas id="work" hidden></canvas>
+<script src="vendor/omggif.js"></script>
+<script src="engine.js"></script>
+<script src="gif-encoder.js"></script>
+<script src="raster.js"></script>
+<script src="motion-input.js"></script>
+<script>
+const E = window.EmblemEngine, $ = (id) => document.getElementById(id);
+const work = $("work"), wctx = work.getContext("2d", { willReadFrequently: true });
+let imageData = null, cells = null, grid = { cols: 48, rows: 24 };
+let params = E.defaults(), startT = performance.now();
+let motionMode = false, motionImages = null, motionBake = null;
+
+function hexToRgb(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+
+// ---------- image loading ----------
+function loadFile(file){
+  if(!file||!file.type.startsWith("image/")){toast("not an image");return;}
+  const url=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>{
+    const cap=1024,s=Math.min(1,cap/Math.max(img.width,img.height));
+    work.width=Math.max(1,Math.round(img.width*s));work.height=Math.max(1,Math.round(img.height*s));
+    wctx.clearRect(0,0,work.width,work.height);wctx.drawImage(img,0,0,work.width,work.height);
+    imageData=wctx.getImageData(0,0,work.width,work.height);URL.revokeObjectURL(url);
+    $("fname").textContent=file.name+"  ("+img.width+"×"+img.height+")";
+    $("empty").hidden=true;$("art").hidden=false;$("label").hidden=false;
+    ["expZip","expCopy","copyAnsi","expPng","dlSvg","copyEmbed","dlGif","dlWebm"].forEach(id=>$(id).disabled=false);
+    rebuild();
+  };
+  img.onerror=()=>toast("could not decode image");img.src=url;
+}
+function rebuild(){
+  if(motionMode){if(motionImages)enterMotion(motionImages);return;}
+  if(!imageData)return;
+  grid=E.gridDims(params.cols,imageData.width,imageData.height);
+  cells=(params.renderMode==="braille")
+    ? E.sampleBraille(imageData,grid.cols,grid.rows)
+    : E.sample(imageData,grid.cols,grid.rows);
+  startT=performance.now();
+}
+
+// ---------- motion mode ----------
+function syncMotionControls(){
+  const dis=motionMode;
+  ["fxrotate3d","fxchurn","fxdissolve"].forEach(id=>{$(id).disabled=dis;$(id).closest("label").title=dis?"n/a with motion source":"";});
+  $("allBtn").disabled=dis;
+  $("motionNote").textContent=dis?"Motion mode active — Spin/Churn/Dissolve disabled":"";
+}
+function setPlayerBake(bake){
+  motionBake=bake;
+  startT=performance.now();
+}
+async function enterMotion(images){
+  motionImages=images;
+  const g=E.gridDims(params.cols,images[0].width,images[0].height);
+  grid=g;
+  motionBake=E.bakeColorFramesFromImages(images,g.cols,g.rows,params);
+  setPlayerBake(motionBake);
+  motionMode=true;
+  $("empty").hidden=true;$("art").hidden=false;$("label").hidden=false;
+  ["expZip","expCopy","copyAnsi","expPng","dlSvg","copyEmbed","dlGif","dlWebm"].forEach(id=>$(id).disabled=false);
+  $("stillBtn").classList.remove("hide");
+  syncMotionControls();
+}
+$("gifBtn").addEventListener("click",()=>$("gifFile").click());
+$("gifFile").onchange=async(e)=>{const f=e.target.files[0];if(!f)return;try{enterMotion(EmblemMotion.gifToImageDatas(await f.arrayBuffer()));}catch(err){toast("GIF decode failed: "+err.message);}};
+$("vidBtn").addEventListener("click",()=>$("vidFile").click());
+$("vidFile").onchange=async(e)=>{const f=e.target.files[0];if(!f)return;try{toast("decoding video…");enterMotion(await EmblemMotion.videoToImageDatas(f));}catch(err){toast("video failed: "+err.message);}};
+$("camBtn").onclick=async()=>{try{toast("capturing webcam…");enterMotion(await EmblemMotion.webcamToImageDatas());}catch(err){toast("webcam failed: "+err.message);}};
+$("stillBtn").onclick=()=>{motionMode=false;motionImages=null;motionBake=null;$("stillBtn").classList.add("hide");rebuild();syncMotionControls();};
+
+// ---------- live render ----------
+function currentGrid(){
+  const now=performance.now()-startT;
+  const idx=Math.floor((now/E.FRAME_TICK_MS)%E.FRAMES);
+  if(motionMode&&motionBake){
+    // play back baked motion frames
+    const f=motionBake.frames[idx%motionBake.frames.length];
+    // convert baked frame back to chars/colors grid for gridToHTML
+    const chars=[],colors=[];
+    for(let y=0;y<f.t.length;y++){
+      chars.push(f.t[y].split(""));
+      colors.push(f.c[y].map(ci=>ci<0?null:(motionBake.palette[ci]||null)));
+    }
+    return {chars,colors};
+  }
+  return E.renderGrid(cells,grid.cols,grid.rows,params,idx);
+}
+function gridToHTML(g){
+  let h="";
+  for(let y=0;y<g.chars.length;y++){
+    let cur=null,run="";
+    for(let x=0;x<g.chars[y].length;x++){
+      const ch=g.chars[y][x],col=g.colors[y][x],key=col?col.join(","):null;
+      if(key!==cur){if(run)h+=cur?`<span style="color:rgb(${cur})">${run}</span>`:run;run="";cur=key;}
+      run+=esc(ch);
+    }
+    if(run)h+=cur?`<span style="color:rgb(${cur})">${run}</span>`:run;
+    h+="\n";
+  }
+  return h;
+}
+function renderLabel(){
+  const now=performance.now()-startT,per=params.label.length+20;
+  const pos=Math.floor(((now%2000)/2000)*per);
+  $("label").innerHTML=E.shimmerCells(params.label,pos).map(c=>c.rgb?`<span style="color:rgb(${c.rgb.join(",")})">${esc(c.ch)}</span>`:" ").join("");
+}
+function currentColorBake(){return(motionMode&&motionBake)?motionBake:E.bakeColorFrames(cells,grid.cols,grid.rows,params);}
+function rebakeMotion(){if(!motionImages)return;motionBake=E.bakeColorFramesFromImages(motionImages,grid.cols,grid.rows,params);startT=performance.now();}
+function tick(){if(cells||(motionMode&&motionBake)){$("art").innerHTML=gridToHTML(currentGrid());renderLabel();}requestAnimationFrame(tick);}
+tick();
+
+// ---------- control binding ----------
+function onRenderParamChange(){if(motionMode&&motionImages){rebakeMotion();}else{startT=performance.now();}}
+function bindRange(id,key,vId,fmt,structural){const el=$(id);el.addEventListener("input",()=>{params[key]=parseFloat(el.value);if(vId)$(vId).textContent=fmt(params[key]);if(structural)rebuild();else onRenderParamChange();});}
+bindRange("cols","cols","colsV",v=>v|0,true);
+bindRange("busy","busyness","busyV",v=>v.toFixed(2));
+bindRange("thr","threshold","thrV",v=>v.toFixed(2));
+bindRange("edge","edgeAmount","edgeV",v=>v.toFixed(2));
+bindRange("edgeThr","edgeThreshold","edgeThrV",v=>v.toFixed(2));
+bindRange("edgeDet","edgeDetail","edgeDetV",v=>v.toFixed(2));
+bindRange("spd","speed","spdV",v=>v.toFixed(1));
+bindRange("bri","brightness","briV",v=>v.toFixed(2));
+bindRange("con","contrast","conV",v=>v.toFixed(2));
+bindRange("accThr","accentThreshold","accThrV",v=>v.toFixed(2));
+bindRange("lift","imageLift","liftV",v=>v.toFixed(2));
+bindRange("turns","rotTurns","turnsV",v=>v|0);
+bindRange("persp","perspective","perspV",v=>v.toFixed(2));
+bindRange("far","farDim","farV",v=>v.toFixed(2));
+$("inv").addEventListener("change",e=>{params.invert=e.target.checked;onRenderParamChange();});
+$("symbol").addEventListener("change",e=>{params.symbolKey=e.target.value;onRenderParamChange();});
+$("custom").addEventListener("input",e=>{params.customSymbols=e.target.value;onRenderParamChange();});
+$("labelTxt").addEventListener("input",e=>params.label=e.target.value||" ");
+$("baseColor").addEventListener("input",e=>{params.baseColor=hexToRgb(e.target.value);onRenderParamChange();});
+$("accentColor").addEventListener("input",e=>{params.accentColor=hexToRgb(e.target.value);onRenderParamChange();});
+
+function seg(segId,key,after,noRebake){$(segId).querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+  $(segId).querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on");params[key]=b.dataset.v;if(after)after(b.dataset.v);if(noRebake){startT=performance.now();}else{onRenderParamChange();}}));}
+seg("matchSeg","matchMode");
+seg("axisSeg","rotAxis",null,true);
+seg("colorSeg","colorMode",v=>{
+  $("accThrRow").classList.toggle("hide",v!=="palette");
+  $("liftRow").classList.toggle("hide",v!=="image");
+  $("colorPick").classList.toggle("hide",v==="image");
+});
+seg("edgeSeg","edgeStyle",v=>{
+  $("edgeLinesBox").classList.toggle("hide",v!=="lines");
+});
+// note: colorSeg and edgeSeg use the default seg() path which calls onRenderParamChange()
+
+// render mode (Glyph / Braille)
+function applyRenderMode(v){
+  params.renderMode=v;
+  const isBraille=v==="braille";
+  $("brailleBox").classList.toggle("hide",!isBraille);
+  // disable incompatible controls
+  $("spinLabel").classList.toggle("hide",isBraille);
+  $("edgeStyleRow").classList.toggle("hide",isBraille);
+  $("edgeBrailleNote").classList.toggle("hide",!isBraille);
+  // re-derive visibility from current params when returning to Glyph
+  $("edgeLinesBox").classList.toggle("hide",isBraille||params.edgeStyle!=="lines");
+  if(isBraille){$("spinBox").classList.add("hide");}else{syncFx();}
+  rebuild();
+}
+seg("modeSeg","renderMode",applyRenderMode);
+
+// braille-specific toggles
+$("dither").addEventListener("change",e=>{params.dither=e.target.checked;onRenderParamChange();});
+$("dotChurn").addEventListener("change",e=>{params.dotChurn=e.target.checked;onRenderParamChange();});
+
+// fx checkboxes
+function syncFx(){E.FX_KEYS.forEach(k=>{const cb=$("fx"+k);params.fx[k]=cb.checked;cb.closest("label").classList.toggle("on",cb.checked);});$("spinBox").classList.toggle("hide",!params.fx.rotate3d||params.renderMode==="braille");startT=performance.now();}
+E.FX_KEYS.forEach(k=>$("fx"+k).addEventListener("change",syncFx));
+$("allBtn").addEventListener("click",()=>{const allOn=E.FX_KEYS.every(k=>$("fx"+k).checked);E.FX_KEYS.forEach(k=>$("fx"+k).checked=!allOn);syncFx();});
+params.fx={rotate3d:false,churn:true,shimmer:false,dissolve:false};
+params.dither=$("dither").checked;
+params.dotChurn=$("dotChurn").checked;
+
+// ---------- file / drag-drop ----------
+$("fileBtn").addEventListener("click",()=>$("file").click());
+$("file").addEventListener("change",e=>e.target.files[0]&&loadFile(e.target.files[0]));
+const sw=$("stageWrap"),drop=$("drop");
+["dragenter","dragover"].forEach(ev=>sw.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("show");}));
+["dragleave","drop"].forEach(ev=>sw.addEventListener(ev,e=>{e.preventDefault();if(ev==="drop"||e.target===sw)drop.classList.remove("show");}));
+sw.addEventListener("drop",e=>{const f=e.dataTransfer.files[0];if(f)loadFile(f);});
+window.addEventListener("dragover",e=>e.preventDefault());window.addEventListener("drop",e=>e.preventDefault());
+
+// ---------- exports ----------
+function download(name,blob){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+$("expZip").addEventListener("click",()=>{if(!cells&&!motionBake)return;let bytes;if(motionMode&&motionBake&&motionImages){const cb=motionBake;const textFrames=E.bakeFramesFromImages(motionImages,grid.cols,grid.rows,params);const files=[{name:"player.html",text:E.buildPlayerHTML(cb,params)},{name:"config.json",text:E.buildConfig(params)}];const ansiFrames=cb.frames.map(f=>E.paletteFrameToAnsi(cb.palette,f));files.push({name:"emblem.ansi",text:ansiFrames[0]});ansiFrames.forEach((f,i)=>files.push({name:`ansi/frame_${i+1}.ans`,text:f}));textFrames.forEach((f,i)=>files.push({name:`frames/frame_${i+1}.txt`,text:f+"\n"}));bytes=E.zipStore(files);}else{bytes=E.buildBundle(cells,grid.cols,grid.rows,params);}download("emblem.zip",new Blob([bytes],{type:"application/zip"}));toast("exported emblem.zip");});
+$("expCopy").addEventListener("click",async()=>{const g=currentGrid();const t=g.chars.map(r=>r.join("")).join("\n");try{await navigator.clipboard.writeText(t);toast("frame copied");}catch{toast("clipboard blocked");}});
+$("copyAnsi").addEventListener("click",async()=>{if(!cells&&!motionBake)return;
+  let palette,frame;
+  if(motionMode&&motionBake){const idx=Math.floor((performance.now()-startT)/E.FRAME_TICK_MS)%motionBake.frames.length;palette=motionBake.palette;frame=motionBake.frames[idx]||motionBake.frames[0];}
+  else{const idx=Math.floor((performance.now()-startT)/E.FRAME_TICK_MS)%E.FRAMES;const b=E.bakeColorFrameAt(cells,grid.cols,grid.rows,params,idx);palette=b.palette;frame=b.frame;}
+  const ansi=E.paletteFrameToAnsi(palette,frame);
+  try{await navigator.clipboard.writeText(ansi);toast("ANSI frame copied");}catch{toast("clipboard blocked");}});
+$("expPng").addEventListener("click",()=>{
+  const g=currentGrid(),lines=g.chars.map(r=>r.join("").replace(/\s+$/,""));
+  const cw=8.4,ch=16,pad=24,w=Math.max(1,...lines.map(l=>l.length))*cw+pad*2,h=lines.length*ch+pad*2+40;
+  const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d");
+  x.fillStyle="#0a0a0a";x.fillRect(0,0,w,h);x.font="14px 'DejaVu Sans Mono',monospace";x.textBaseline="top";
+  for(let y=0;y<g.chars.length;y++)for(let xx=0;xx<g.chars[y].length;xx++){const col=g.colors[y][xx];if(g.chars[y][xx]===" ")continue;x.fillStyle=col?`rgb(${col.join(",")})`:"rgb(216,210,188)";x.fillText(g.chars[y][xx],pad+xx*cw,pad+y*ch);}
+  x.fillStyle="rgb(216,210,188)";x.textAlign="center";x.fillText(params.label,w/2,pad+g.chars.length*ch+14);
+  c.toBlob(b=>{download("emblem.png",b);toast("PNG saved");});
+});
+
+$("dlSvg").addEventListener("click",()=>{if(!cells&&!motionBake)return;
+  let palette,frame;
+  if(motionMode&&motionBake){const idx=Math.floor((performance.now()-startT)/E.FRAME_TICK_MS)%motionBake.frames.length;palette=motionBake.palette;frame=motionBake.frames[idx]||motionBake.frames[0];}
+  else{const idx=Math.floor((performance.now()-startT)/E.FRAME_TICK_MS)%E.FRAMES;const b=E.bakeColorFrameAt(cells,grid.cols,grid.rows,params,idx);palette=b.palette;frame=b.frame;}
+  const svg=E.paletteFrameToSvg(palette,frame);
+  download("emblem.svg",new Blob([svg],{type:"image/svg+xml"}));toast("SVG saved");});
+$("copyEmbed").addEventListener("click",async()=>{if(!cells&&!motionBake)return;const cb=currentColorBake();try{await navigator.clipboard.writeText(E.buildEmbedSnippet(cb,params));toast("embed snippet copied");}catch{toast("clipboard blocked");}});
+$("dlGif").addEventListener("click",()=>{if(!cells&&!motionBake)return;const cb=currentColorBake();const ras=EmblemRaster.rasterizeFrames(cb,{tickMs:E.FRAME_TICK_MS});const gif=GifEncoder.encodeGif({width:ras.width,height:ras.height,palette:ras.palette,frames:ras.frames,loop:0});const blob=new Blob([gif],{type:"image/gif"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="emblem.gif";a.click();URL.revokeObjectURL(a.href);toast("GIF saved");});
+$("dlWebm").addEventListener("click",async()=>{if(!cells&&!motionBake)return;const cb=currentColorBake();const m=EmblemRaster.metrics(cb,{});const canvas=document.createElement("canvas");canvas.width=m.width;canvas.height=m.height;const ctx=canvas.getContext("2d");const TICK=E.FRAME_TICK_MS,N=cb.frames.length;try{const blob=await EmblemRaster.recordWebm(canvas,(t)=>EmblemRaster.drawFrameToCanvas(ctx,cb,Math.floor(t/TICK)%N,{}),N*TICK,25);const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="emblem.webm";a.click();URL.revokeObjectURL(a.href);toast("WebM saved");}catch(e){toast("WebM failed: "+e.message);}});
+
+// ---------- theme picker ----------
+(function(){
+  const sel=$("theme");
+  Object.keys(E.THEMES).forEach(k=>{const o=document.createElement("option");o.value=k;o.textContent=k[0].toUpperCase()+k.slice(1);sel.appendChild(o);});
+  sel.value=params.theme||"flat";
+  sel.addEventListener("change",()=>{params.theme=sel.value;});
+})();
+
+// ---------- gallery ----------
+(function(){
+  const gal=$("gallery");
+  E.PRESETS.forEach(preset=>{
+    const btn=document.createElement("button");
+    btn.textContent=preset.name;
+    btn.addEventListener("click",()=>{
+      Object.assign(params,preset.params);
+      if(preset.params.fx)params.fx=Object.assign({rotate3d:false,churn:true,shimmer:false,dissolve:false},preset.params.fx);
+      applyParams(params);
+      if(imageData)rebuild();
+    });
+    gal.appendChild(btn);
+  });
+})();
+
+// ---------- applyParams ----------
+function rgbToHex(rgb){return "#"+rgb.map(v=>v.toString(16).padStart(2,"0")).join("");}
+function applyParams(p){
+  p=E.withDefaults(p);
+  params=p;
+  // ranges
+  if($("cols")){$("cols").value=p.cols;$("colsV").textContent=p.cols|0;}
+  if($("busy")){$("busy").value=p.busyness;$("busyV").textContent=p.busyness.toFixed(2);}
+  if($("thr")){$("thr").value=p.threshold;$("thrV").textContent=p.threshold.toFixed(2);}
+  if($("edge")){$("edge").value=p.edgeAmount;$("edgeV").textContent=p.edgeAmount.toFixed(2);}
+  if($("edgeThr")){$("edgeThr").value=p.edgeThreshold;$("edgeThrV").textContent=p.edgeThreshold.toFixed(2);}
+  if($("edgeDet")){$("edgeDet").value=p.edgeDetail;$("edgeDetV").textContent=p.edgeDetail.toFixed(2);}
+  if($("spd")){$("spd").value=p.speed;$("spdV").textContent=p.speed.toFixed(1);}
+  if($("bri")){$("bri").value=p.brightness;$("briV").textContent=p.brightness.toFixed(2);}
+  if($("con")){$("con").value=p.contrast;$("conV").textContent=p.contrast.toFixed(2);}
+  if($("accThr")){$("accThr").value=p.accentThreshold;$("accThrV").textContent=p.accentThreshold.toFixed(2);}
+  if($("lift")){$("lift").value=p.imageLift;$("liftV").textContent=p.imageLift.toFixed(2);}
+  if($("turns")){$("turns").value=p.rotTurns;$("turnsV").textContent=p.rotTurns|0;}
+  if($("persp")){$("persp").value=p.perspective;$("perspV").textContent=(p.perspective).toFixed(2);}
+  if($("far")){$("far").value=p.farDim;$("farV").textContent=(p.farDim).toFixed(2);}
+  // checkboxes
+  if($("inv"))$("inv").checked=!!p.invert;
+  if($("dither"))$("dither").checked=!!p.dither;
+  if($("dotChurn"))$("dotChurn").checked=!!p.dotChurn;
+  // select
+  if($("symbol"))$("symbol").value=p.symbolKey;
+  if($("labelTxt"))$("labelTxt").value=p.label;
+  if($("baseColor"))$("baseColor").value=rgbToHex(p.baseColor);
+  if($("accentColor"))$("accentColor").value=rgbToHex(p.accentColor);
+  // theme
+  if($("theme"))$("theme").value=p.theme||"flat";
+  // segmented controls: renderMode, matchMode, colorMode, edgeStyle, rotAxis
+  function setSeg(segId,val){const seg=$(segId);if(!seg)return;seg.querySelectorAll("button").forEach(b=>{b.classList.toggle("on",b.dataset.v===val);});}
+  setSeg("modeSeg",p.renderMode);
+  setSeg("matchSeg",p.matchMode);
+  setSeg("colorSeg",p.colorMode);
+  setSeg("edgeSeg",p.edgeStyle);
+  setSeg("axisSeg",p.rotAxis);
+  // fx checkboxes
+  E.FX_KEYS.forEach(k=>{const cb=$("fx"+k);if(cb){cb.checked=!!(p.fx&&p.fx[k]);cb.closest("label").classList.toggle("on",!!cb.checked);}});
+  $("spinBox").classList.toggle("hide",!(p.fx&&p.fx.rotate3d)||p.renderMode==="braille");
+  // visibility toggles (mirror seg() after callbacks)
+  const isBraille=p.renderMode==="braille";
+  $("brailleBox").classList.toggle("hide",!isBraille);
+  $("spinLabel").classList.toggle("hide",isBraille);
+  $("edgeStyleRow").classList.toggle("hide",isBraille);
+  $("edgeBrailleNote").classList.toggle("hide",!isBraille);
+  $("edgeLinesBox").classList.toggle("hide",isBraille||p.edgeStyle!=="lines");
+  const cm=p.colorMode;
+  $("colorPick").classList.toggle("hide",cm==="image");
+  $("accThrRow").classList.toggle("hide",cm!=="palette");
+  $("liftRow").classList.toggle("hide",cm!=="image");
+  startT=performance.now();
+}
+
+// ---------- share link ----------
+$("shareBtn").addEventListener("click",async()=>{
+  const url=location.origin+location.pathname+"#e="+E.encodeShare(params);
+  try{await navigator.clipboard.writeText(url);toast("share link copied");}catch{toast("clipboard blocked");}
+});
+
+// ---------- load from hash ----------
+(function(){
+  if(location.hash.indexOf("#e=")===0){
+    const p=E.decodeShare(location.hash.slice(3));
+    if(p)applyParams(p);
+  }
+})();
+
+// ---------- toast ----------
+let toastT;function toast(m){const el=$("toast");el.textContent=m;el.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove("show"),1600);}
+
+// ---------- selftest ----------
+if(location.search.includes("selftest")){const r=E.selftest();document.title=(r.allPass?"PASS ":"FAIL ")+r.passed+"/"+r.total;$("empty").innerHTML="<b>SELFTEST "+(r.allPass?"PASS":"FAIL")+"</b> "+r.passed+"/"+r.total+"<br>"+r.results.map(x=>(x.pass?"✓":"✗")+" "+x.name).join("<br>");}
+</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+/* ===========================================================================
+   RM3 brand palette — design tokens for the RM3 framework.
+   The "RM3" name and emblem are (c) RM3, all rights reserved (see NOTICE).
+   =========================================================================== */
+:root {
+  /* Surfaces (warm near-black) */
+  --rm3-bg-base: #0b0a08;
+  --rm3-bg-panel: #0f0e0b;
+  --rm3-bg-panel-alt: #131109;
+  --rm3-bg-hover: #1a180f;
+  --rm3-bg-active: #201d12;
+
+  /* Borders (olive -> gold) */
+  --rm3-border: #3d3620;
+  --rm3-border-bright: #5a4f2f;
+  --rm3-border-accent: #7a6b3f;
+
+  /* Text (dim -> accent bone) */
+  --rm3-text-dim: #6b5f42;
+  --rm3-text-base: #a89b72;
+  --rm3-text-bright: #c4b896;
+  --rm3-text-header: #d8c99a;
+  --rm3-text-accent: #e8dcc8;
+
+  /* Status */
+  --rm3-ok: #7a9e5a;
+  --rm3-warn: #b8892a;
+  --rm3-err: #9b3535;
+
+  /* Emblem */
+  --rm3-bone: #c9c2aa;
+  --rm3-bone-dim: #96907e;
+  --rm3-accent: #c64038;
+
+  /* Type */
+  --rm3-font-mono: 'Share Tech Mono', 'Courier New', monospace;
+  --rm3-tracking: 0.04em;
+  --rm3-tracking-header: 0.20em;
+
+  /* Geometry (square corners by design) */
+  --rm3-radius: 0px;
+  --rm3-border-w: 1px;
+}

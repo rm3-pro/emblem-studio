@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="RM3">
+  <title>RM3</title>
+  <!-- Black Box dark tile + 1px gold frame (use as an app icon / avatar chip) -->
+  <rect width="256" height="256" fill="#0B0A08"/>
+  <rect x="0.5" y="0.5" width="255" height="255" fill="none" stroke="#3D3620" stroke-width="1"/>
+  <polygon points="128,24 218.07,76 218.07,180 128,232 37.93,180 37.93,76"
+           fill="none" stroke="#C9C2AA" stroke-width="13" stroke-linejoin="round"/>
+  <polygon points="128,64 183.43,96 183.43,160 128,192 72.57,160 72.57,96"
+           fill="none" stroke="#96907E" stroke-width="9" stroke-linejoin="round"/>
+  <circle cx="128" cy="128" r="19" fill="#C64038"/>
+</svg>
